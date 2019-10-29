@@ -8,7 +8,7 @@ import (
 
 type App struct {
 	server  http.Server
-	Setting map[string]string
+	Setting SettingType
 	Router  Router
 }
 
