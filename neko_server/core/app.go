@@ -8,13 +8,21 @@ import (
 
 type App struct {
 	server  http.Server
-	Setting Setting
+	Setting map[string]string
 	Router  Router
 }
 
 
 func (self *App) StartApp() {
-	address := self.Setting.Host + ":" + self.Setting.Port
+	var host, port string
+	if self.Setting == nil {
+		host = BaseSettings["Host"]
+		port = BaseSettings["Port"]
+	} else {
+		host = self.Setting["Host"]
+		port = self.Setting["Port"]
+	}
+	address := host + ":" + port
 	handler := Handler{
 		Setting: self.Setting,
 		Router:  self.Router,

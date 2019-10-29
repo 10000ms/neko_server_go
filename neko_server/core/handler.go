@@ -6,8 +6,8 @@ import (
 )
 
 type Handler struct{
-	Setting Setting
-	Router Router
+	Setting map[string]string
+	Router  Router
 }
 
 

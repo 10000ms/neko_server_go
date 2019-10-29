@@ -1,6 +1,6 @@
 package core
 
-type Setting struct {
-	Host string
-	Port string
+var BaseSettings = map[string]string{
+	"Host": "127.0.0.1",
+	"Port": "11000",
 }
