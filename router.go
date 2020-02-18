@@ -6,5 +6,5 @@ import (
 )
 
 var Router = core.Router{
-    core.Route{Pattern: "/", HandlerFunc: handler.Index},
+    "^/$": handler.Index,
 }
