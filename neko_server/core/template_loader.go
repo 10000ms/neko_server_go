@@ -5,14 +5,12 @@ import (
     "neko_server_go/neko_server/utils"
 )
 
-
 type TemplateLoader struct {
-    path string
+    Path string
 }
 
-
 func (self *TemplateLoader) GetSource(relativePath string) string {
-    realPath := self.path + relativePath
+    realPath := self.Path + relativePath
     b, err := ioutil.ReadFile(realPath)
     if err != nil {
         utils.LogFatal(err)

@@ -1,14 +1,10 @@
 package main
 
 import (
-    "neko_server_go/neko_server/core"
+    "neko_server_go/neko_server"
 )
 
 func main() {
-    app := core.App{
-        Setting: Settings,
-        Router:  Router,
-    }
-
-    app.StartApp()
+    o := neko_server.Options{}
+    neko_server.StartAPP(Settings, Router, o)
 }

@@ -2,19 +2,18 @@ package core
 
 import (
     "log"
-    "net/http"
     "regexp"
 )
 
 type Route struct {
-    HandlerFunc http.HandlerFunc
+    HandlerFunc NekoHandlerFunc
 }
 
-type Router map[string]func(http.ResponseWriter, *http.Request)
+type Router map[string]NekoHandlerFunc
 
 /*
 更新router
- */
+*/
 func (self Router) UpdateHandler(router Router) Router {
     for pattern, handler := range router {
         self[pattern] = handler
@@ -22,12 +21,12 @@ func (self Router) UpdateHandler(router Router) Router {
     return self
 }
 
-
 /**
 根据pattern获取对应的路由，找不到就返回defaultHandler路由
 现在的匹配模式暂时是全匹配
+TODO：增加path传参
 */
-func (self Router) MatchHandler(path string, defaultHandler http.HandlerFunc) http.HandlerFunc {
+func (self Router) MatchHandler(path string, defaultHandler NekoHandlerFunc) NekoHandlerFunc {
     for pattern, handler := range self {
         match, err := regexp.MatchString(pattern, path)
         if err != nil {
@@ -40,7 +39,6 @@ func (self Router) MatchHandler(path string, defaultHandler http.HandlerFunc) ht
     }
     return defaultHandler
 }
-
 
 var DefaultRouter = Router{
     "^/$": DefaultIndexHandler,

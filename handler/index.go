@@ -8,7 +8,7 @@ import (
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {
-    err := r.ParseForm()       //解析参数，默认是不会解析的
+    err := r.ParseForm() //解析参数，默认是不会解析的
     if err != nil {
         log.Fatal(err)
         return

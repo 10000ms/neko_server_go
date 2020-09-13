@@ -1,20 +1,23 @@
 package core
 
 import (
+    "errors"
     "fmt"
+    "reflect"
+    "strconv"
     "strings"
 )
 
 type node int32
 
 const (
-    notTypeNode node = 0
-    htmlNode    node = 1
-    ifNode      node = 2
-    forNode     node = 3
-    endNode     node = 4
-    elseNode    node = 5
-    valueNode   node = 6
+    notTypeNode node = iota
+    htmlNode
+    ifNode
+    forNode
+    endNode
+    elseNode
+    valueNode
 )
 
 /*
@@ -40,7 +43,7 @@ type TemplateNode struct {
     contentList []string
     htmlOnly    bool
     nodeType    node
-    childNodes  []TemplateNode
+    childNodes  []*TemplateNode
     fatherNode  *TemplateNode
     environment map[string]interface{}
     done        bool
@@ -57,9 +60,9 @@ func (self *TemplateNode) typeForNode() {
         self.nodeType = htmlNode
     } else {
         tempContent := strings.TrimSpace(self.content)
-        if tempContent[:3] == "if " {
+        if len(tempContent) > 3 && tempContent[:3] == "if " {
             self.nodeType = ifNode
-        } else if tempContent[:4] == "for " {
+        } else if len(tempContent) > 4 && tempContent[:4] == "for " {
             self.nodeType = forNode
         } else if tempContent == "else" {
             self.nodeType = elseNode
@@ -119,8 +122,7 @@ func (self *TemplateNode) analyseValueNode() {
     self.done = true
 }
 
-
-func (self *TemplateNode) _addContent(content string, htmlOnly bool) TemplateNode {
+func (self *TemplateNode) _addContent(content string, htmlOnly bool) *TemplateNode {
     if self.nodeType == ifNode || self.nodeType == forNode {
         newNode := TemplateNode{
             content,
@@ -133,12 +135,12 @@ func (self *TemplateNode) _addContent(content string, htmlOnly bool) TemplateNod
             false,
         }
         newNode.Init()
-        self.childNodes = append(self.childNodes, newNode)
-        var returnNode TemplateNode
+        self.childNodes = append(self.childNodes, &newNode)
+        var returnNode *TemplateNode
         if newNode.done == false {
-            returnNode = newNode
+            returnNode = &newNode
         } else {
-            returnNode = *self
+            returnNode = self
         }
         return returnNode
     } else {
@@ -146,10 +148,16 @@ func (self *TemplateNode) _addContent(content string, htmlOnly bool) TemplateNod
     }
 }
 
-
-func (self *TemplateNode) addContent(content string, htmlOnly bool) TemplateNode {
+func (self *TemplateNode) addContent(content string, htmlOnly bool) *TemplateNode {
+    // 根节点自己没办法导到父节点
+    var trueNode *TemplateNode
+    if self.fatherNode != nil {
+        trueNode = self.fatherNode
+    } else {
+        trueNode = self
+    }
     targetDict := map[bool]*TemplateNode{
-        true:  self.fatherNode,
+        true:  trueNode,
         false: self,
     }
     r := targetDict[self.done]._addContent(content, htmlOnly)
@@ -162,11 +170,9 @@ func (self *TemplateNode) UpdateEnvironment(environment map[string]interface{}) 
     }
 }
 
-
 func (self *TemplateNode) htmlFromHtmlNode() string {
     return self.content
 }
-
 
 func (self *TemplateNode) htmlFromIfNode() string {
     statement := self.environment[self.content].(bool)
@@ -187,49 +193,82 @@ func (self *TemplateNode) htmlFromIfNode() string {
     return r
 }
 
-
 func (self *TemplateNode) htmlFromForNode() string {
-    iterItem := self.environment[self.contentList[len(self.contentList)-1]].([]interface{})
+    iterItemKey := self.contentList[len(self.contentList)-1]
+    if _, ok := self.environment[iterItemKey]; !ok {
+        panic(errors.New("don't have for item: " + iterItemKey))
+    }
+    iterItem := self.environment[iterItemKey]
     r := ""
     keyName := self.contentList[0]
-    for _, i := range iterItem {
-        newEnvironment := make(map[string]interface{})
-        for k, v := range self.environment {
-            newEnvironment[k] = v
-        }
-        newEnvironment[keyName] = i
-        for _, n := range self.childNodes {
-            r += n.htmlFromSelf(newEnvironment)
-        }
+
+    // 复制一份老的环境参数
+    newEnvironment := make(map[string]interface{})
+    for k, v := range self.environment {
+        newEnvironment[k] = v
     }
+
+    iterItemReflect := reflect.ValueOf(iterItem)
+    iterItemKind := iterItemReflect.Kind()
+    if iterItemKind == reflect.Array || iterItemKind == reflect.Slice {
+        for i := 0; i < iterItemReflect.Len(); i++ {
+            for _, n := range self.childNodes {
+                newEnvironment[keyName] = iterItemReflect.Index(i).Interface()
+                r += n.htmlFromSelf(newEnvironment)
+            }
+        }
+    } else {
+        panic(errors.New("unexpect type of for"))
+    }
+
     return r
 }
 
-
 func (self *TemplateNode) htmlFromEndNode() string {
+    self.fatherNode.done = true
     return self.content
 }
-
 
 func (self *TemplateNode) htmlFromElseNode() string {
     return self.content
 }
-
 
 // 传入的environment必须为map[string]interface{}
 func (self *TemplateNode) htmlFromValueNode() string {
     var t interface{}
     t = self.environment
     for _, c := range self.contentList {
-        t = t.(map[string]interface{})[c]
+        tReflect := reflect.ValueOf(t)
+        tKind := tReflect.Kind()
+        if tKind == reflect.Map {
+            t = tReflect.MapIndex(reflect.ValueOf(c)).Interface()
+        } else if tKind == reflect.Struct {
+            t = tReflect.FieldByName(c).Interface()
+        } else if tKind == reflect.Ptr {
+            t = tReflect.Elem().FieldByName(c).Interface()
+        } else {
+            panic(errors.New("unexpect type"))
+        }
+    }
+    // 处理一下数字
+    vReflect := reflect.ValueOf(t)
+    vKind := vReflect.Kind()
+    switch vKind {
+    case reflect.Int:
+        t = strconv.Itoa(t.(int))
+    case reflect.Int64:
+        t = strconv.FormatInt(t.(int64), 10)
+    case reflect.Float64:
+        t = strconv.FormatFloat(t.(float64), 'E', -1, 64)
+    case reflect.Float32:
+        t = strconv.FormatFloat(float64(t.(float32)), 'E', -1, 64)
     }
     return fmt.Sprintf("%s", t)
 }
 
-
 // 根据自身不同的类型，使用对应方法，输出html
 func (self *TemplateNode) htmlFromSelf(environment map[string]interface{}) string {
-    htmlMethods := map[node]func() string {
+    htmlMethods := map[node]func() string{
         htmlNode:  self.htmlFromHtmlNode,
         ifNode:    self.htmlFromIfNode,
         forNode:   self.htmlFromForNode,
@@ -242,22 +281,21 @@ func (self *TemplateNode) htmlFromSelf(environment map[string]interface{}) strin
     return m()
 }
 
-
 // 节点管理器，存放主节点
 type TemplateNodeManage struct {
-    nodeList    []TemplateNode
-    currentNode TemplateNode
+    nodeList    []*TemplateNode
+    currentNode *TemplateNode
 }
 
 func (self *TemplateNodeManage) htmlFromNode(environment map[string]interface{}) string {
     var html string
-    for _, i := range environment {
-        html += fmt.Sprintf("%s", i)
+    for _, i := range self.nodeList {
+        html += i.htmlFromSelf(environment)
     }
     return html
 }
 
-func (self *TemplateNodeManage) addContent(content string, htmlOnly bool) TemplateNode {
+func (self *TemplateNodeManage) addContent(content string, htmlOnly bool) *TemplateNode {
     if len(self.nodeList) > 0 && self.nodeList[len(self.nodeList)-1].done == false {
         r := self.currentNode.addContent(content, htmlOnly)
         self.currentNode = r
@@ -273,16 +311,17 @@ func (self *TemplateNodeManage) addContent(content string, htmlOnly bool) Templa
             make(map[string]interface{}),
             false,
         }
+        //t.fatherNode = &t
         t.Init()
-        self.nodeList = append(self.nodeList, t)
-        self.currentNode = t
-        return t
+        self.nodeList = append(self.nodeList, &t)
+        self.currentNode = &t
+        return &t
     }
 }
 
 // 渲染器
 type Render struct {
-    templateLoader TemplateLoader
+    TemplateLoader TemplateLoader
 }
 
 // 获取搜索模板语法的标签和状态
@@ -319,7 +358,7 @@ func (self *Render) contentToNodeManage(content string) TemplateNodeManage {
 
 // 渲染出 html
 func (self *Render) Render(template string, environment map[string]interface{}) string {
-    content := self.templateLoader.GetSource(template)
+    content := self.TemplateLoader.GetSource(template)
     templateManage := self.contentToNodeManage(content)
     html := templateManage.htmlFromNode(environment)
     return html

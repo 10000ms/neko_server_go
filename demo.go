@@ -8,7 +8,7 @@ import (
 )
 
 func sayhelloName(w http.ResponseWriter, r *http.Request) {
-    err := r.ParseForm()       //解析参数，默认是不会解析的
+    err := r.ParseForm() //解析参数，默认是不会解析的
     if err != nil {
         log.Fatal(err)
         return
@@ -21,7 +21,7 @@ func sayhelloName(w http.ResponseWriter, r *http.Request) {
         fmt.Println("key:", k)
         fmt.Println("val:", strings.Join(v, ""))
     }
-     _, err = fmt.Fprintf(w, "Hello Wrold!") //这个写入到w的是输出到客户端的
+    _, err = fmt.Fprintf(w, "Hello Wrold!") //这个写入到w的是输出到客户端的
     if err != nil {
         log.Fatal(err)
         return
