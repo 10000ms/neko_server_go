@@ -2,9 +2,9 @@ package neko_server
 
 import (
     "database/sql"
-    "neko_server_go/neko_server/core"
-    "neko_server_go/neko_server/db"
-    "neko_server_go/neko_server/utils"
+    "neko_server_go/core"
+    "neko_server_go/db"
+    "neko_server_go/utils"
 )
 
 /*

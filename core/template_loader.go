@@ -2,7 +2,7 @@ package core
 
 import (
     "io/ioutil"
-    "neko_server_go/neko_server/utils"
+    "neko_server_go/utils"
 )
 
 type TemplateLoader struct {

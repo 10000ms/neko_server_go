@@ -3,7 +3,7 @@ package core
 import (
 	"fmt"
 	"log"
-	"neko_server_go/neko_server/utils"
+	"neko_server_go/utils"
 	"net/http"
 	"runtime"
 )

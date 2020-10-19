@@ -2,7 +2,7 @@ package core
 
 import (
     "errors"
-    "neko_server_go/neko_server/db"
+    "neko_server_go/db"
 )
 
 type SettingType map[string]interface{}

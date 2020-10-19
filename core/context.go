@@ -2,7 +2,7 @@ package core
 
 import (
 	uuid "github.com/satori/go.uuid"
-	"neko_server_go/neko_server/utils"
+	"neko_server_go/utils"
 	"net/http"
 )
 
@@ -16,7 +16,7 @@ func InitContext(app *App, r *http.Request) Context {
     requestID := r.Header.Get(HttpRequestHeaderRequestID)
     utils.LogDebug("original request id is: ", requestID)
     if requestID == "" {
-        requestID = uuid.Must(uuid.NewV4()).String()
+        requestID = uuid.Must(uuid.NewV4(), nil).String()
         utils.LogDebug("generate request id is: ", requestID)
     }
     c := Context{
