@@ -1,4 +1,4 @@
-module neko_server_go
+module github.com/10000ms/neko_server_go
 
 go 1.14
 
