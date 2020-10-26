@@ -1,12 +1,12 @@
 package core
 
 import (
-    "log"
-    "regexp"
+	"log"
+	"regexp"
 )
 
 type Route struct {
-    HandlerFunc NekoHandlerFunc
+	HandlerFunc NekoHandlerFunc
 }
 
 type Router map[string]NekoHandlerFunc
@@ -15,10 +15,10 @@ type Router map[string]NekoHandlerFunc
 更新router
 */
 func (self Router) UpdateHandler(router Router) Router {
-    for pattern, handler := range router {
-        self[pattern] = handler
-    }
-    return self
+	for pattern, handler := range router {
+		self[pattern] = handler
+	}
+	return self
 }
 
 /**
@@ -27,19 +27,19 @@ func (self Router) UpdateHandler(router Router) Router {
 TODO：增加path传参
 */
 func (self Router) MatchHandler(path string, defaultHandler NekoHandlerFunc) NekoHandlerFunc {
-    for pattern, handler := range self {
-        match, err := regexp.MatchString(pattern, path)
-        if err != nil {
-            log.Fatal(err)
-        } else {
-            if match == true {
-                return handler
-            }
-        }
-    }
-    return defaultHandler
+	for pattern, handler := range self {
+		match, err := regexp.MatchString(pattern, path)
+		if err != nil {
+			log.Fatal(err)
+		} else {
+			if match == true {
+				return handler
+			}
+		}
+	}
+	return defaultHandler
 }
 
 var DefaultRouter = Router{
-    "^/$": DefaultIndexHandler,
+	"^/$": DefaultIndexHandler,
 }

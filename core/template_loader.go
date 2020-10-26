@@ -1,20 +1,20 @@
 package core
 
 import (
-    "io/ioutil"
-    "neko_server_go/utils"
+	"io/ioutil"
+	"neko_server_go/utils"
 )
 
 type TemplateLoader struct {
-    Path string
+	Path string
 }
 
 func (self *TemplateLoader) GetSource(relativePath string) string {
-    realPath := self.Path + relativePath
-    b, err := ioutil.ReadFile(realPath)
-    if err != nil {
-        utils.LogFatal(err)
-    }
-    r := string(b)
-    return r
+	realPath := self.Path + relativePath
+	b, err := ioutil.ReadFile(realPath)
+	if err != nil {
+		utils.LogFatal(err)
+	}
+	r := string(b)
+	return r
 }
