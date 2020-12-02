@@ -9,27 +9,29 @@ import (
 )
 
 type App struct {
-	server  http.Server
-	Setting SettingType
-	Router  Router
-	Db      map[string]*sql.DB
+	server        http.Server
+	Setting       SettingType
+	Router        *Router
+	RouterManager *RouterManager
+	Db            map[string]*sql.DB
 }
 
-func (self *App) StartApp() {
+func (a *App) StartServer() {
 	// 从基础配置更新配置
-	if self.Setting["Debug"] == true {
+	if a.Setting["Debug"] == true {
 		utils.LogInfo("Debug模式开启")
 	}
 	var host, port string
-	host = self.Setting["Host"].(string)
-	port = self.Setting["Port"].(string)
+	host = a.Setting["Host"].(string)
+	port = a.Setting["Port"].(string)
 	address := host + ":" + port
+
 	// 更新router
-	self.Router = DefaultRouter.UpdateHandler(self.Router)
+	a.Router = DefaultRouter.MergeRouter(a.Router)
+	a.RouterManager = initRouterManager(a.Router)
+
 	handler := Handler{
-		App:     self,
-		Setting: self.Setting,
-		Router:  self.Router,
+		App: a,
 	}
 	server := http.Server{
 		Addr:    address,

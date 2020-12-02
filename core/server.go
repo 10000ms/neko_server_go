@@ -2,36 +2,29 @@ package core
 
 import (
 	"fmt"
-	"github.com/10000ms/neko_server_go/utils"
+	"neko_server_go/utils"
 	"net/http"
 )
 
-func RequestLog(r *http.Request) string {
-	s := fmt.Sprintf("%s %s (%s)", r.Method, r.RequestURI, r.RemoteAddr)
+func RequestLog(c *Context, r *http.Request) string {
+	s := fmt.Sprintf("%s %s %s (%s)", c.LogRequestID(), r.Method, r.RequestURI, r.RemoteAddr)
 	return s
 }
 
-func (self *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// 错误处理
 	defer recoveryHandlerPanic(w, r)
-
-	utils.LogInfo(RequestLog(r))
-
-	var notFoundHandler NekoHandlerFunc
-	// NotFoundHandler配置可以更改默认的NotFoundHandler
-	settingNotFoundHandler := self.Setting["NotFoundHandler"]
-	if settingNotFoundHandler == nil {
-		notFoundHandler = NotFoundHandler
-	} else {
-		notFoundHandler = settingNotFoundHandler.(NekoHandlerFunc)
-	}
 
 	// 获取writer
 	writer := w.(ResWriter)
 
 	// 处理context
-	context := InitContext(self.App, r)
+	context := InitContext(h.App, r)
+	utils.LogInfo(RequestLog(&context, r))
 
-	handler := self.Router.MatchHandler(r.URL.Path, notFoundHandler)
-	handler(&context, writer)
+	NotFoundHandler := h.App.Setting[SettingNotFoundHandler].(NekoHandlerFunc)
+	handler, pathParams := h.App.RouterManager.MatchHandler(context.Request.URL.Path, &NotFoundHandler)
+	context.PathParams = pathParams
+	c := *handler
+	c(&context, writer)
 }

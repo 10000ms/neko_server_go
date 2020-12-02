@@ -9,27 +9,28 @@ type SettingType map[string]interface{}
 
 // 声明一下系统使用的配置项
 const (
-	SettingServiceName = "ServiceName"
-	SettingHost        = "Host"
-	SettingPort        = "Port"
-	SettingDebug       = "Debug"
-	SettingDb          = "Db"
-	SettingDbUsername  = "Username"
-	SettingDbPassword  = "Password"
-	SettingDbNetwork   = "Network"
-	SettingDbServer    = "Server"
-	SettingDbPort      = "Port"
-	SettingDbDatabase  = "Database"
+	SettingServiceName     = "ServiceName"
+	SettingHost            = "Host"
+	SettingPort            = "Port"
+	SettingDebug           = "Debug"
+	SettingDb              = "Db"
+	SettingDbUsername      = "Username"
+	SettingDbPassword      = "Password"
+	SettingDbNetwork       = "Network"
+	SettingDbServer        = "Server"
+	SettingDbPort          = "Port"
+	SettingDbDatabase      = "Database"
+	SettingNotFoundHandler = "NotFoundHandler"
 )
 
-func (self SettingType) UpdateSettings(newSettings map[string]interface{}) SettingType {
+func (s SettingType) UpdateSettings(newSettings map[string]interface{}) SettingType {
 	for k, v := range newSettings {
-		self[k] = v
+		s[k] = v
 	}
-	return self
+	return s
 }
 
-func (self *SettingType) DefaultSettings() SettingType {
+func (s *SettingType) DefaultSettings() SettingType {
 	return SettingType{
 		SettingHost:  "127.0.0.1",
 		SettingPort:  "11000",
@@ -37,27 +38,27 @@ func (self *SettingType) DefaultSettings() SettingType {
 	}
 }
 
-func (self *SettingType) ToMap() map[string]interface{} {
+func (s *SettingType) ToMap() map[string]interface{} {
 	r := make(map[string]interface{})
-	for k, v := range *self {
+	for k, v := range *s {
 		r[k] = v
 	}
 	return r
 }
 
-func (self SettingType) CheckMustContain() error {
+func (s SettingType) CheckMustContain() error {
 	mustContainList := []string{SettingServiceName}
 	for _, item := range mustContainList {
-		if _, ok := self[item]; !ok {
+		if _, ok := s[item]; !ok {
 			return errors.New("missing settings items: " + item)
 		}
 	}
 	return nil
 }
 
-func (self SettingType) CheckDbSetting() error {
-	if _, ok := self[SettingDb]; ok {
-		if _, ok := self[SettingDb].(db.NekoDbSettingType); ok {
+func (s SettingType) CheckDbSetting() error {
+	if _, ok := s[SettingDb]; ok {
+		if _, ok := s[SettingDb].(db.NekoDbSettingType); ok {
 			return nil
 		} else {
 			return errors.New("error db settings")

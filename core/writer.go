@@ -2,6 +2,6 @@ package core
 
 import "net/http"
 
-type ResWriter struct {
+type ResWriter interface {
 	http.ResponseWriter
 }

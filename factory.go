@@ -1,4 +1,4 @@
-package neko_server
+package neko_server_go
 
 import (
 	"database/sql"
@@ -13,7 +13,7 @@ import (
 1. setting的初始化
 2. db连接初始化
 */
-func StartAPP(settings core.SettingType, router core.Router, option core.Options) {
+func StartAPP(settings core.SettingType, router *core.Router, option *core.Options) {
 	for _, f := range option.InitFunc {
 		f()
 	}
@@ -32,6 +32,9 @@ func StartAPP(settings core.SettingType, router core.Router, option core.Options
 	}
 
 	serviceName := settings[core.SettingServiceName].(string)
+
+	// ..
+	utils.LogSystem("                                                                                                \n               ,--.                                                                             \n,--,--,  ,---. |  |,-. ,---.      ,---.  ,---. ,--.--.,--.  ,--.,---. ,--.--.     ,---.  ,---.  \n|      \\| .-. :|     /| .-. |    (  .-' | .-. :|  .--' \\  `'  /| .-. :|  .--'    | .-. || .-. | \n|  ||  |\\   --.|  \\  \\' '-' '    .-'  `)\\   --.|  |     \\    / \\   --.|  |       ' '-' '' '-' ' \n`--''--' `----'`--'`--'`---'     `----'  `----'`--'      `--'   `----'`--'       .`-  /  `---'  \n                                                                                 `---'          ")
 
 	utils.LogSystem("////////////////////////////")
 	utils.LogSystem("Service Name: " + serviceName)
@@ -61,12 +64,23 @@ func StartAPP(settings core.SettingType, router core.Router, option core.Options
 		utils.LogSystem("////////////////////////////")
 	}
 
+	// 处理404handler
+	var notFoundHandler NekoHandlerFunc
+	// NotFoundHandler配置可以更改默认的NotFoundHandler
+	settingNotFoundHandler := settings[core.SettingNotFoundHandler]
+	if settingNotFoundHandler == nil {
+		notFoundHandler = core.NotFoundHandler
+	} else {
+		notFoundHandler = settingNotFoundHandler.(NekoHandlerFunc)
+	}
+	settings[core.SettingNotFoundHandler] = notFoundHandler
+
 	app := core.App{
 		Setting: settings,
 		Router:  router,
 		Db:      Db,
 	}
-	app.StartApp()
+	app.StartServer()
 }
 
 type Setting = core.SettingType
@@ -74,3 +88,4 @@ type Router = core.Router
 type Options = core.Options
 type Context = core.Context
 type NekoHandlerFunc = core.NekoHandlerFunc
+type ResWriter = core.ResWriter

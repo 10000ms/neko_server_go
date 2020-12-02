@@ -9,8 +9,8 @@ type TemplateLoader struct {
 	Path string
 }
 
-func (self *TemplateLoader) GetSource(relativePath string) string {
-	realPath := self.Path + relativePath
+func (t *TemplateLoader) GetSource(relativePath string) string {
+	realPath := t.Path + relativePath
 	b, err := ioutil.ReadFile(realPath)
 	if err != nil {
 		utils.LogFatal(err)

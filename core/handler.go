@@ -1,15 +1,13 @@
 package core
 
 import (
-    "fmt"
-    "log"
-    "net/http"
+	"fmt"
+	"log"
+	"net/http"
 )
 
 type Handler struct {
-	App     *App
-	Setting map[string]interface{}
-	Router  Router
+	App *App
 }
 
 type NekoHandlerFunc func(*Context, ResWriter)

@@ -29,7 +29,7 @@ func log(level string, value []interface{}, color string) {
 }
 
 func LogDebug(value ...interface{}) {
-	log("[DEBUG]", value, "")
+	log("[DEBUG]", value, "35")
 }
 
 func LogInfo(value ...interface{}) {

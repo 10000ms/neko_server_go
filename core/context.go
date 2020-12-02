@@ -8,9 +8,10 @@ import (
 )
 
 type Context struct {
-	RequestID string
-	App       *App
-	Request   *http.Request
+	RequestID  string
+	App        *App
+	Request    *http.Request
+	PathParams *map[string]string
 }
 
 func InitContext(app *App, r *http.Request) Context {
