@@ -1,15 +1,17 @@
 package core
 
 import (
+	"neko_server_go/utils"
 	"regexp"
 	"strings"
 )
 
 type routeNode struct {
-	part     string
-	pattern  *regexp.Regexp
-	handler  *NekoHandlerFunc
-	children []*routeNode
+	part            string
+	originTotalPath string
+	pattern         *regexp.Regexp
+	handler         *NekoHandlerFunc
+	children        []*routeNode
 }
 
 type Router map[string]NekoHandlerFunc
@@ -50,6 +52,7 @@ func pathToRegexp(part string) string {
 func (r *routeNode) CheckMatchChildren(part string, pathParams *map[string]string) (*routeNode, bool) {
 	for _, c := range r.children {
 		if c != nil && c.pattern.MatchString(part) {
+			utils.LogDebug("Match Child: ", part, " node: ", c.originTotalPath)
 
 			// 处理path传参的情况
 			match := c.pattern.FindStringSubmatch(part)
@@ -78,24 +81,28 @@ func (r Router) MergeRouter(router *Router) *Router {
 	return &r
 }
 
-func (r RouterManager) addRouteNode(patternList []string, handler *NekoHandlerFunc, currencyNode *routeNode) {
-	if len(patternList) != 0 {
-		// 长度不为0代表有子节点
+func (r RouterManager) addRouteNode(patternList []string, handler NekoHandlerFunc, currencyNode *routeNode, originPath string) {
+	if len(patternList) == 0 {
 		if handler != nil {
-			currencyNode.handler = handler
+			utils.LogDebug("path: ", originPath, ", add Node handler to ", currencyNode.part, ", ", currencyNode, ", ", handler)
+			currencyNode.handler = &handler
+			currencyNode.originTotalPath = originPath
 		}
 	} else {
+		// 长度不为0代表有子节点
 		c, in := currencyNode.CheckHaveChildren(patternList[0])
 		if in == true {
-			r.addRouteNode(patternList[1:], handler, c)
+			//utils.LogDebug("path： ", originPath, ", ", patternList, ", in Node: ", c.originTotalPath, ", currencyNode: ", currencyNode.originTotalPath)
+			r.addRouteNode(patternList[1:], handler, c, originPath)
 		} else {
 			// 不在就创建一个子节点
 			child := routeNode{
-				part:    patternList[0],
-				pattern: regexp.MustCompile(pathToRegexp(patternList[0])),
+				part:            patternList[0],
+				pattern:         regexp.MustCompile(pathToRegexp(patternList[0])),
 			}
+			//utils.LogDebug("path： ", originPath, ", ", patternList, ", create new Node: ", child.part)
 			currencyNode.children = append(currencyNode.children, &child)
-			r.addRouteNode(patternList[1:], handler, &child)
+			r.addRouteNode(patternList[1:], handler, &child, originPath)
 		}
 	}
 }
@@ -119,7 +126,9 @@ func initRouterManager(router *Router) *RouterManager {
 		rootRouteNode: &root,
 	}
 	for pattern, handler := range *router {
-		r.addRouteNode(splitPath(pattern), &handler, &root)
+		patternList := splitPath(pattern)
+		utils.LogDebug("sasdasdsdad", pattern, handler)
+		r.addRouteNode(patternList, &handler, &root, pattern)
 	}
 	return &r
 }
@@ -141,6 +150,7 @@ func (r *RouterManager) MatchHandler(path string, defaultHandler *NekoHandlerFun
 
 func matchHandlerAndGetPathParams(patternList []string, currencyNode *routeNode, pathParams *map[string]string) *NekoHandlerFunc {
 	if len(patternList) == 0 {
+		utils.LogDebug("match handler: ", currencyNode.originTotalPath, ", ", currencyNode)
 		return currencyNode.handler
 	} else {
 		c, in := currencyNode.CheckMatchChildren(patternList[0], pathParams)
@@ -153,5 +163,5 @@ func matchHandlerAndGetPathParams(patternList []string, currencyNode *routeNode,
 }
 
 var DefaultRouter = Router{
-	"^/$": DefaultIndexHandler,
+	"/": DefaultIndexHandler,
 }
