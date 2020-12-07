@@ -3,25 +3,10 @@ package core
 import (
 	"errors"
 	"neko_server_go/db"
+	"neko_server_go/enum"
 )
 
 type SettingType map[string]interface{}
-
-// 声明一下系统使用的配置项
-const (
-	SettingServiceName     = "ServiceName"
-	SettingHost            = "Host"
-	SettingPort            = "Port"
-	SettingDebug           = "Debug"
-	SettingDb              = "Db"
-	SettingDbUsername      = "Username"
-	SettingDbPassword      = "Password"
-	SettingDbNetwork       = "Network"
-	SettingDbServer        = "Server"
-	SettingDbPort          = "Port"
-	SettingDbDatabase      = "Database"
-	SettingNotFoundHandler = "NotFoundHandler"
-)
 
 func (s SettingType) UpdateSettings(newSettings map[string]interface{}) SettingType {
 	for k, v := range newSettings {
@@ -32,9 +17,9 @@ func (s SettingType) UpdateSettings(newSettings map[string]interface{}) SettingT
 
 func (s *SettingType) DefaultSettings() SettingType {
 	return SettingType{
-		SettingHost:  "127.0.0.1",
-		SettingPort:  "11000",
-		SettingDebug: false,
+		enum.SettingHost:  "127.0.0.1",
+		enum.SettingPort:  "11000",
+		enum.SettingDebug: false,
 	}
 }
 
@@ -47,7 +32,7 @@ func (s *SettingType) ToMap() map[string]interface{} {
 }
 
 func (s SettingType) CheckMustContain() error {
-	mustContainList := []string{SettingServiceName}
+	mustContainList := []string{enum.SettingServiceName}
 	for _, item := range mustContainList {
 		if _, ok := s[item]; !ok {
 			return errors.New("missing settings items: " + item)
@@ -57,8 +42,8 @@ func (s SettingType) CheckMustContain() error {
 }
 
 func (s SettingType) CheckDbSetting() error {
-	if _, ok := s[SettingDb]; ok {
-		if _, ok := s[SettingDb].(db.NekoDbSettingType); ok {
+	if _, ok := s[enum.SettingDb]; ok {
+		if _, ok := s[enum.SettingDb].(db.NekoDbSettingType); ok {
 			return nil
 		} else {
 			return errors.New("error db settings")

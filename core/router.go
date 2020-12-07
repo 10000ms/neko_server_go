@@ -1,6 +1,7 @@
 package core
 
 import (
+	"neko_server_go/enum"
 	"regexp"
 	"strings"
 )
@@ -20,7 +21,7 @@ type RouterManager struct {
 	rootRouteNode *routeNode
 }
 
-func CreateMethodsHandler(methods HttpMethods, handler NekoHandlerFunc) MethodsHandler {
+func CreateMethodsHandler(methods enum.HttpMethods, handler NekoHandlerFunc) MethodsHandler {
 	r := MethodsHandler{
 		HttpMethod: methods,
 		Handler:    &handler,
@@ -142,7 +143,7 @@ func initRouterManager(router *Router) *RouterManager {
 		part: "",
 	}
 	r := RouterManager{
-		OriginRouter: router,
+		OriginRouter:  router,
 		rootRouteNode: &root,
 	}
 	for pattern, handler := range *router {
@@ -191,5 +192,5 @@ func matchHandlerAndGetPathParams(
 }
 
 var DefaultRouter = Router{
-	"/": CreateMethodsHandler(GetMethodsHandler, DefaultIndexHandler),
+	"/": CreateMethodsHandler(enum.HttpMethodsGet, DefaultIndexHandler),
 }

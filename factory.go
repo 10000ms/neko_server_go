@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"neko_server_go/core"
 	"neko_server_go/db"
+	"neko_server_go/enum"
 	"neko_server_go/utils"
 )
 
@@ -31,7 +32,7 @@ func StartAPP(settings core.SettingType, router *core.Router, option *core.Optio
 		return
 	}
 
-	serviceName := settings[core.SettingServiceName].(string)
+	serviceName := settings[enum.SettingServiceName].(string)
 
 	// ..
 	utils.LogSystem("                                                                                                \n               ,--.                                                                             \n,--,--,  ,---. |  |,-. ,---.      ,---.  ,---. ,--.--.,--.  ,--.,---. ,--.--.     ,---.  ,---.  \n|      \\| .-. :|     /| .-. |    (  .-' | .-. :|  .--' \\  `'  /| .-. :|  .--'    | .-. || .-. | \n|  ||  |\\   --.|  \\  \\' '-' '    .-'  `)\\   --.|  |     \\    / \\   --.|  |       ' '-' '' '-' ' \n`--''--' `----'`--'`--'`---'     `----'  `----'`--'      `--'   `----'`--'       .`-  /  `---'  \n                                                                                 `---'          ")
@@ -42,16 +43,16 @@ func StartAPP(settings core.SettingType, router *core.Router, option *core.Optio
 
 	// 初始化db
 	Db := make(map[string]*sql.DB)
-	if _, ok := settings[core.SettingDb]; ok {
+	if _, ok := settings[enum.SettingDb]; ok {
 		err := settings.CheckDbSetting()
 		if err == nil {
-			for dbName, dbConfig := range settings[core.SettingDb].(map[string]map[string]string) {
-				username := dbConfig[core.SettingDbUsername]
-				password := dbConfig[core.SettingDbPassword]
-				network := dbConfig[core.SettingDbNetwork]
-				server := dbConfig[core.SettingDbServer]
-				port := dbConfig[core.SettingDbPort]
-				database := dbConfig[core.SettingDbDatabase]
+			for dbName, dbConfig := range settings[enum.SettingDb].(map[string]map[string]string) {
+				username := dbConfig[enum.SettingDbUsername]
+				password := dbConfig[enum.SettingDbPassword]
+				network := dbConfig[enum.SettingDbNetwork]
+				server := dbConfig[enum.SettingDbServer]
+				port := dbConfig[enum.SettingDbPort]
+				database := dbConfig[enum.SettingDbDatabase]
 				dbConn := db.CreateDbConnect(username, password, network, server, port, database)
 				if dbConn != nil {
 					Db[dbName] = dbConn
@@ -67,13 +68,13 @@ func StartAPP(settings core.SettingType, router *core.Router, option *core.Optio
 	// 处理404handler
 	var notFoundHandler NekoHandlerFunc
 	// NotFoundHandler配置可以更改默认的NotFoundHandler
-	settingNotFoundHandler := settings[core.SettingNotFoundHandler]
+	settingNotFoundHandler := settings[enum.SettingNotFoundHandler]
 	if settingNotFoundHandler == nil {
 		notFoundHandler = core.NotFoundHandler
 	} else {
 		notFoundHandler = settingNotFoundHandler.(NekoHandlerFunc)
 	}
-	settings[core.SettingNotFoundHandler] = notFoundHandler
+	settings[enum.SettingNotFoundHandler] = notFoundHandler
 
 	app := core.App{
 		Setting: settings,

@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"neko_server_go/enum"
 	"neko_server_go/utils"
 	"net/http"
 )
@@ -22,7 +23,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	context := InitContext(h.App, r)
 	utils.LogInfo(RequestLog(&context, r))
 
-	NotFoundHandler := h.App.Setting[SettingNotFoundHandler].(NekoHandlerFunc)
+	NotFoundHandler := h.App.Setting[enum.SettingNotFoundHandler].(NekoHandlerFunc)
 	handler, pathParams := h.App.RouterManager.MatchHandler(
 		context.Request.Method,
 		context.Request.URL.Path,
