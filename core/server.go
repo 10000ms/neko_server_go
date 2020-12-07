@@ -23,7 +23,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	utils.LogInfo(RequestLog(&context, r))
 
 	NotFoundHandler := h.App.Setting[SettingNotFoundHandler].(NekoHandlerFunc)
-	handler, pathParams := h.App.RouterManager.MatchHandler(context.Request.URL.Path, &NotFoundHandler)
+	handler, pathParams := h.App.RouterManager.MatchHandler(
+		context.Request.Method,
+		context.Request.URL.Path,
+		&NotFoundHandler,
+	)
 	context.PathParams = pathParams
 	c := *handler
 	c(&context, writer)

@@ -10,7 +10,26 @@ type Handler struct {
 	App *App
 }
 
+type HttpMethods string
+
 type NekoHandlerFunc func(*Context, ResWriter)
+
+const (
+	GetMethodsHandler     HttpMethods = "GET"
+	HeadMethodsHandler    HttpMethods = "HEAD"
+	PostMethodsHandler    HttpMethods = "POST"
+	PutMethodsHandler     HttpMethods = "PUT"
+	DeleteMethodsHandler  HttpMethods = "DELETE"
+	ConnectMethodsHandler HttpMethods = "CONNECT"
+	OptionsMethodsHandler HttpMethods = "OPTIONS"
+	TraceMethodsHandler   HttpMethods = "TRACE"
+	PatchMethodsHandler   HttpMethods = "PATCH"
+)
+
+type MethodsHandler struct {
+	HttpMethod HttpMethods
+	Handler *NekoHandlerFunc
+}
 
 func InternalErrorHandler(w http.ResponseWriter, r *http.Request, msg ...interface{}) {
 	w.WriteHeader(500)
